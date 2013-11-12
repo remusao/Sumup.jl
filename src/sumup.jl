@@ -1,19 +1,31 @@
 
+immutable Sentence
+    tokens
+    original::String
+end
+
 function getsentences(corpus::Corpus, preproc!::Function)
 
+    # Get sentences by spliting on punctuation
     docs = map(documents(corpus)) do x
         x |> text |> d -> split(d, r"[.!?]+")
     end
 
+    # Preprocess each sentence and build a vector of sentences
     sentences = {}
     for d in docs
         for s in d
+            # Preproc
             stringdoc = StringDocument(s)
             preproc!(stringdoc)
             preprocs = text(stringdoc)
+
+            # Tokenize
             tokens = TextAnalysis.tokenize(TextAnalysis.EnglishLanguage, preprocs)
+
             if (length(tokens)) > 1
-                push!(sentences, (strip(s, [' ', '\n']), tokens))
+                # Add a sentence (original + tokens) to the resulting vector
+                push!(sentences, Sentence(tokens, strip(s, [' ', '\n'])))
             end
         end
     end
@@ -74,19 +86,19 @@ function sumup(path::String, top::Integer, k::Integer, topwords::Integer)
         for (i, s) in enumerate(sentences)
 
             # For each token in sentence
-            for tok in s[2]
+            for tok in s.tokens
                 # Increase word weight with its probability
                 topsentences[i] += get(proba, tok, 0.0)
             end
 
-            # Normalize weight
-            topsentences[i] /= length(s[2])
+            # Normalize weight with total number of words in the sentence
+            topsentences[i] /= length(s.tokens)
         end
 
         println("\nTopic")
         # Print top sentences for current topic
         for i in argsort(topsentences)[1:top]
-            println(sentences[i][1])
+            println(sentences[i].original)
         end
     end
 end
