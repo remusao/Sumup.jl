@@ -1,5 +1,10 @@
 module Sumup
 
-# package code goes here
+using TextAnalysis
+using TopicModeling
+
+include("sumup.jl")
+
+export sumup
 
 end # module
